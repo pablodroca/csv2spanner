@@ -18,12 +18,15 @@ import ar.devfest.csv2spanner.database.SpannerService;
 
 public class Importer {
   private static final Logger log = Logger.getLogger(Importer.class.getName());
+  private static final int IMPORT_BATCH_QTY = 20;
+
   private SpannerService spanner;
   private int importedRows;
+  private ArrayList<Row> batchedRows = new ArrayList<>(IMPORT_BATCH_QTY);
 
   public Importer(SpannerService spanner) {
     this.spanner = spanner;
-    this.setImportedRows(0);
+    this.importedRows = 0;
   }
 
   public void importCSV(String entityName, InputStream in) throws IOException {
@@ -41,7 +44,7 @@ public class Importer {
     log.info(String.format("Header properties detected:%s", propertyNames));
     while (it.hasNext()) {
       CSVRecord record = it.next();
-      Row row = new Row(entityName);
+      Row row = new Row(entityName, true);
       ArrayList<String> values = new ArrayList<>(record.size());
       for (int i = 0; i < record.size(); i++) {
         String value = record.get(i);
@@ -50,9 +53,22 @@ public class Importer {
         values.add(value);
       }
       log.info(String.format("Storing %s(%s)", entityName, values));
-      spanner.persist(row);
-      this.importedRows++;
+      this.batchRow(row);
     }
+    this.flushBatchedRows();
+  }
+
+  private void batchRow(Row row) {
+    this.batchedRows.add(row);
+    if (this.batchedRows.size() == IMPORT_BATCH_QTY) {
+      this.flushBatchedRows();
+    }
+  }
+
+  private void flushBatchedRows() {
+    spanner.persist(this.batchedRows);
+    this.importedRows += this.batchedRows.size();
+    this.batchedRows.clear();
   }
 
   public int getImportedRows() {

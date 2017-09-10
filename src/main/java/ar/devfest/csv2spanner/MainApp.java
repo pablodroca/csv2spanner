@@ -7,6 +7,10 @@ import ar.devfest.csv2spanner.services.Importer;
 
 public class MainApp {
   public static void main(String[] args) {
+    if (args.length != 2) {
+      System.out.println("Usage: java -jar csv2spanner.jar <spanner-instance> <database-name>.");
+      System.exit(-1);
+    }
     System.out.println(String.format("Writing values to: %s -> %s.\n", args[0], args[1]));
 
     try (SpannerService spanner = new SpannerService(args[0], args[1])) {
