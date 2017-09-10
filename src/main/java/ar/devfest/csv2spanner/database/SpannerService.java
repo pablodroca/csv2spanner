@@ -47,19 +47,19 @@ public class SpannerService implements Closeable {
 
   private Mutation buildMutation(Row row) {
     WriteBuilder builder = Mutation.newInsertOrUpdateBuilder(row.getTableName());
-    for(ColumnValue columnValue : row) {
+    for (ColumnValue columnValue : row) {
       ValueBinder<WriteBuilder> valueBinder = builder.set(columnValue.getColumn());
       Object value = columnValue.getValue();
       if (value instanceof Long) {
-        valueBinder.to((Long)value);
+        valueBinder.to((Long) value);
       } else if (value instanceof String) {
-        valueBinder.to((String)value);
+        valueBinder.to((String) value);
       } else if (value instanceof Double) {
-        valueBinder.to((Double)value);
+        valueBinder.to((Double) value);
       } else if (value instanceof Boolean) {
-        valueBinder.to((Boolean)value);
+        valueBinder.to((Boolean) value);
       } else if (value instanceof Date) {
-        valueBinder.to((Date)value);
+        valueBinder.to((Date) value);
       }
     }
     return builder.build();
